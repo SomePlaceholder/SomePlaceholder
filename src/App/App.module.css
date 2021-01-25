@@ -1,0 +1,15 @@
+body {
+  background-color: #312e2b;
+}
+
+.Container {
+  width: 100vw;
+  height: 100vh;
+}
+
+.error {
+  font-size: 7.5em;
+  color: wheat;
+  text-align: center;
+  padding: 100px;
+}
