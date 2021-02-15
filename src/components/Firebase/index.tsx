@@ -2,17 +2,17 @@ import { UserProvider, useAuth } from './Context';
 import {
   createUser,
   signInWithUsername,
-  signInAnonymous,
   signOut,
+  putSquareColorData,
 } from './Functions';
 
-export { auth } from './Firebase';
+export { auth, db } from './Firebase';
 
 export {
   UserProvider,
   useAuth,
   createUser,
   signInWithUsername,
-  signInAnonymous,
   signOut,
+  putSquareColorData,
 };

@@ -1,5 +1,6 @@
 import firebase from 'firebase';
-import { auth } from './Firebase';
+import { auth, db } from './Firebase';
+import { SquareColorData } from '../Training';
 
 // *** Auth API ***
 export function createUser(
@@ -20,10 +21,14 @@ export function signInWithUsername(
   );
 }
 
-export function signInAnonymous(): Promise<firebase.auth.UserCredential> {
-  return auth.signInAnonymously();
-}
-
 export function signOut(): Promise<void> {
   return auth.signOut();
+}
+
+// *** Database API ***
+export function putSquareColorData(userId: string, props: SquareColorData) {
+  db.ref(`users/${userId}/SquareColors/log`).push({
+    timestamp: firebase.database.ServerValue.TIMESTAMP,
+    ...props,
+  });
 }

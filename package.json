@@ -32,7 +32,8 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "yarn run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "start-localhost": "PUBLIC_URL=/ HTTPS=true react-scripts start"
   },
   "eslintConfig": {
     "extends": [

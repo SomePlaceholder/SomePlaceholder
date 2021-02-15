@@ -88,3 +88,13 @@
   margin: 5px;
   font-size: 1.7em;
 }
+
+.StatsList {
+  margin-left: 50px;
+  font-size: 2em;
+  color: yellowgreen;
+}
+
+.Statsentry {
+  font-size: 1.5em;
+}

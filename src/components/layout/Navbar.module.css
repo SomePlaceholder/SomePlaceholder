@@ -3,6 +3,7 @@
   height: 45px;
   background-color: wheat;
   color: black;
+  box-sizing: border-box;
 }
 
 .NavbarText {
