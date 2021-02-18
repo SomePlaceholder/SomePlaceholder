@@ -18,6 +18,7 @@ import styles from './SquareColors.module.css';
 
 export const SquareColorStart: React.FC = (): ReactElement => {
   const [start, setStart] = useState(false);
+  const [amount, setAmount] = useState(3);
   const [settings, setSettings] = useState<randomSquareSettings | undefined>(
     undefined,
   );
@@ -38,8 +39,12 @@ export const SquareColorStart: React.FC = (): ReactElement => {
     }
   }, [currentUser]);
 
-  const settingsCallback = (settingsData?: randomSquareSettings) => {
+  const settingsCallback = (
+    amountNum: number,
+    settingsData?: randomSquareSettings,
+  ) => {
     setSettings(settingsData);
+    setAmount(amountNum);
     setStart(true);
   };
 
@@ -47,7 +52,7 @@ export const SquareColorStart: React.FC = (): ReactElement => {
     <div>
       <NavbarMod />
       {start ? (
-        <SquareColors settings={settings} amount={3} />
+        <SquareColors settings={settings} amount={amount} />
       ) : (
         <StartPage settings={settings} callback={settingsCallback} />
       )}
@@ -57,15 +62,13 @@ export const SquareColorStart: React.FC = (): ReactElement => {
 
 interface StartPageProps {
   // eslint-disable-next-line no-unused-vars
-  callback: (settings?: randomSquareSettings) => void;
+  callback: (amountNum: number, settings?: randomSquareSettings) => void;
   settings?: randomSquareSettings;
 }
 
 const StartPage: React.FC<StartPageProps> = (props): ReactElement => {
   const { callback, settings } = props;
   const [showSettings, setShowSettings] = useState(false);
-
-  const callbackClick = () => callback(settings);
 
   const schema = yup.object().shape({
     amount: yup
@@ -105,56 +108,69 @@ const StartPage: React.FC<StartPageProps> = (props): ReactElement => {
   return (
     <div className={styles.StartPage}>
       <Stats />
-      {settings ? (
-        <>
-          <Button
-            variant="primary"
-            onClick={() => {
-              setShowSettings(!showSettings);
-            }}
-          >
-            Settings
-          </Button>
-          <Formik
-            validationSchema={schema}
-            validateOnChange={false}
-            onSubmit={(values, actions) => {
-              const settingsRef = SquareColorFromDataSettingsRef(
-                settings.userId,
-              );
-              settingsRef.update(values).then(() => {
-                actions.resetForm();
-                actions.setSubmitting(false);
-                callback({ userId: settings.userId, settings: values });
+      <Button
+        variant="primary"
+        onClick={() => {
+          setShowSettings(!showSettings);
+        }}
+      >
+        Settings
+      </Button>
+      <Formik
+        enableReinitialize
+        validationSchema={schema}
+        validateOnChange={false}
+        onSubmit={(values, actions) => {
+          const valueAm = values.amount ? values.amount : 2;
+          if (settings) {
+            const settingsRef = SquareColorFromDataSettingsRef(settings.userId);
+            settingsRef.update(values).then(() => {
+              actions.resetForm();
+              actions.setSubmitting(false);
+              callback(valueAm, {
+                userId: settings.userId,
+                settings: values,
               });
-            }}
-            initialValues={{
-              amount: settings.settings.amount,
-              numGames: settings.settings.numGames,
-              targetTime: settings.settings.targetTime,
-              mistakesWeight: settings.settings.mistakesWeight,
-              timeWeight: settings.settings.timeWeight,
-            }}
-          >
-            {({ handleSubmit, handleChange, values, errors, isSubmitting }) => (
-              <Form noValidate onSubmit={handleSubmit}>
-                {showSettings ? (
+            });
+          } else {
+            callback(valueAm);
+          }
+        }}
+        initialValues={
+          settings
+            ? {
+                amount: settings.settings.amount,
+                numGames: settings.settings.numGames,
+                targetTime: settings.settings.targetTime,
+                mistakesWeight: settings.settings.mistakesWeight,
+                timeWeight: settings.settings.timeWeight,
+              }
+            : {
+                amount: 50,
+              }
+        }
+      >
+        {({ handleSubmit, handleChange, values, errors, isSubmitting }) => (
+          <Form noValidate onSubmit={handleSubmit}>
+            {showSettings ? (
+              <>
+                <Form.Group controlId="amount">
+                  <Form.Label>Amount of Squares</Form.Label>
+                  <Form.Control
+                    required
+                    type="number"
+                    name="amount"
+                    placeholder="Amount of Squares"
+                    value={values.amount}
+                    isInvalid={!!errors.amount}
+                    onChange={handleChange}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.amount}
+                  </Form.Control.Feedback>
+                </Form.Group>
+                {settings ? (
                   <>
-                    <Form.Group controlId="amount">
-                      <Form.Label>Amount of Squares</Form.Label>
-                      <Form.Control
-                        required
-                        type="number"
-                        name="amount"
-                        placeholder="Amount of Squares"
-                        value={values.amount}
-                        isInvalid={!!errors.amount}
-                        onChange={handleChange}
-                      />
-                      <Form.Control.Feedback type="invalid">
-                        {errors.targetTime}
-                      </Form.Control.Feedback>
-                    </Form.Group>
                     <Form.Group controlId="numGames">
                       <Form.Label>
                         Number of previous Runs to be included
@@ -219,18 +235,14 @@ const StartPage: React.FC<StartPageProps> = (props): ReactElement => {
                     </Form.Group>
                   </>
                 ) : null}
-                <Button variant="primary" type="submit" disabled={isSubmitting}>
-                  Start ?
-                </Button>
-              </Form>
-            )}
-          </Formik>
-        </>
-      ) : (
-        <Button variant="primary" onClick={callbackClick}>
-          Start
-        </Button>
-      )}
+              </>
+            ) : null}
+            <Button variant="primary" type="submit" disabled={isSubmitting}>
+              Start ?
+            </Button>
+          </Form>
+        )}
+      </Formik>
     </div>
   );
 };
