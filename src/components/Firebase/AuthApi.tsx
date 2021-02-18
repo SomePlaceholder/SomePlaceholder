@@ -1,7 +1,5 @@
 import firebase from 'firebase';
-import { auth, db } from './Firebase';
-import { SquareColorData } from '../Training';
-
+import { auth } from './Firebase';
 // *** Auth API ***
 export function createUser(
   username: string,
@@ -23,12 +21,4 @@ export function signInWithUsername(
 
 export function signOut(): Promise<void> {
   return auth.signOut();
-}
-
-// *** Database API ***
-export function putSquareColorData(userId: string, props: SquareColorData) {
-  db.ref(`users/${userId}/SquareColors/log`).push({
-    timestamp: firebase.database.ServerValue.TIMESTAMP,
-    ...props,
-  });
 }

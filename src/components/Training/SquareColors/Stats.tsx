@@ -1,37 +1,23 @@
 import React, { ReactElement, useState, useEffect } from 'react';
 import type firebase from 'firebase';
-import { db, useAuth } from '../../Firebase';
+import {
+  useAuth,
+  SquareColorMetaOrdered,
+  SquareColorMetaData,
+  transformSquareColorMetaData,
+} from '../../Firebase';
 
 import styles from './SquareColors.module.css';
-
-interface SquareColorData {
-  amount: number;
-  correct: number;
-  wrong: number;
-  timestamp: number;
-}
 
 const StatsElement: React.FC<{ user: firebase.User }> = (
   props,
 ): ReactElement => {
   const { user } = props;
-  const [stats, setStats] = useState<SquareColorData[]>([]);
+  const [stats, setStats] = useState<SquareColorMetaData[]>([]);
   useEffect(() => {
-    const dataRef = db
-      .ref(`users/${user.uid}/SquareColors/log`)
-      .orderByChild('timestamp')
-      .limitToLast(5);
+    const dataRef = SquareColorMetaOrdered(user.uid).limitToLast(5);
     const listener = dataRef.on('value', (snapshot) => {
-      const data: SquareColorData[] = [];
-      snapshot.forEach((children) => {
-        data.push({
-          amount: children.child('amount').val(),
-          correct: children.child('correct').val(),
-          wrong: children.child('wrong').val(),
-          timestamp: children.child('timestamp').val(),
-        });
-      });
-      setStats(data);
+      setStats(transformSquareColorMetaData(snapshot)[0]);
     });
     return () => dataRef.off('value', listener);
   }, [user]);

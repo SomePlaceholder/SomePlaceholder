@@ -1,28 +1,34 @@
 import React, { useEffect, ReactElement } from 'react';
 import { Button } from 'react-bootstrap';
-import { useAuth, putSquareColorData } from '../../Firebase';
-import type { Square } from '../../../Chess';
+import {
+  useAuth,
+  SquareColorMetaRef,
+  SquareColorDataRefFromKey,
+  putSquareColorMetaData,
+  putSquareColorData,
+} from '../../Firebase';
 import { convertToAlgebra } from '../../../Chess';
 import { TimeChart } from '../Charts';
+
+import { answerData } from './SquareColors';
 
 import styles from './SquareColors.module.css';
 
 export interface FinishScreenProps {
   amount: number;
-  squares: Square[];
-  times: number[];
-  answers: boolean[];
+  answers: answerData[];
   restartCallback: () => void;
 }
 
 export const FinishScreen: React.FC<FinishScreenProps> = (
   props,
 ): ReactElement => {
-  const { amount, squares, times, answers, restartCallback } = props;
+  const { amount, answers, restartCallback } = props;
   const { currentUser } = useAuth();
   const data = [];
+
   for (let i = 0; i < amount; i += 1) {
-    data[i] = { x: convertToAlgebra(squares[i]), time: times[i] };
+    data[i] = { x: convertToAlgebra(answers[i].square), time: answers[i].time };
   }
 
   const dataRightAnswers = [];
@@ -30,30 +36,51 @@ export const FinishScreen: React.FC<FinishScreenProps> = (
 
   let dataRightIndex = 0;
   let dataWrongIndex = 0;
+
+  let avgTimeCorrect = 0;
+  let avgTimeWrong = 0;
   for (let i = 0; i < amount; i += 1) {
-    if (answers[i] === true) {
+    if (answers[i].answer === true) {
       dataRightAnswers[dataRightIndex] = {
-        x: convertToAlgebra(squares[i]),
-        time: times[i],
+        x: convertToAlgebra(answers[i].square),
+        time: answers[i].time,
       };
       dataRightIndex += 1;
+      avgTimeCorrect += answers[i].time;
     } else {
       dataWrongAnswers[dataWrongIndex] = {
-        x: convertToAlgebra(squares[i]),
-        time: times[i],
+        x: convertToAlgebra(answers[i].square),
+        time: answers[i].time,
       };
       dataWrongIndex += 1;
+      avgTimeWrong += answers[i].time;
     }
   }
+  avgTimeCorrect = dataRightIndex === 0 ? -1 : avgTimeCorrect / dataRightIndex;
+  avgTimeWrong = dataWrongIndex === 0 ? -1 : avgTimeWrong / dataWrongIndex;
+
   useEffect(() => {
     if (currentUser) {
-      putSquareColorData(currentUser.uid, {
+      const metaRef = SquareColorMetaRef(currentUser.uid);
+      const key = putSquareColorMetaData(metaRef, {
         amount,
         correct: dataRightIndex,
-        wrong: dataWrongIndex,
+        avgTimeCorrect,
+        avgTimeWrong,
+        timestamp: -1,
       });
+      const dataRef = SquareColorDataRefFromKey(currentUser.uid, key);
+      putSquareColorData(dataRef, { timestamp: -1, answers });
     }
-  }, [amount, currentUser, dataRightIndex, dataWrongIndex]);
+  }, [
+    amount,
+    currentUser,
+    dataRightIndex,
+    dataWrongIndex,
+    avgTimeCorrect,
+    avgTimeWrong,
+    answers,
+  ]);
 
   return (
     <div className={styles.FinishScreen}>

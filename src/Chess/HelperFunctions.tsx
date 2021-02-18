@@ -1,4 +1,4 @@
-import { Square } from './randomSquare';
+import type { Square } from './constants';
 
 export function convertToAlgebra(input: Square): string {
   const stringX = `${input.x}`;

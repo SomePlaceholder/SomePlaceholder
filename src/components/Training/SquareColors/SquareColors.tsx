@@ -1,49 +1,51 @@
-import React, { useState } from 'react';
-import { randomSquare } from '../../../Chess';
+import React, { useState, useEffect } from 'react';
+import { randomSquare, randomSquareSettings } from './randomSquare';
 import type { Square } from '../../../Chess';
 import { Header } from './Header';
 import { FinishScreen } from './FinishScreen';
 import { AnswerScreen } from './AnswerScreen';
 import { SquareColorDialog } from './SquareColorDialog';
 
-export interface SquareColorData {
-  amount: number;
-  correct: number;
-  wrong: number;
-}
-
 interface SquareProps {
   amount: number;
+  settings?: randomSquareSettings;
+}
+
+export interface answerData {
+  square: Square;
+  answer: boolean;
+  time: number;
 }
 
 export const SquareColors: React.FC<SquareProps> = (props: SquareProps) => {
-  const { amount } = props;
-  const [times, setTimes] = useState<number[]>([]);
+  const { amount, settings } = props;
   const [count, setCount] = useState(1);
   const [show, setShow] = useState(false);
-  const [answers, setAnswers] = useState<boolean[]>([]);
   const [finish, setFinish] = useState(false);
   const [correct, setCorrect] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  const getRandomSquares = () => {
-    const ranSquares = [];
-    for (let i = 0; i < amount; i += 1) {
-      ranSquares[i] = randomSquare();
-    }
-    return ranSquares;
-  };
+  const [answers, setAnswers] = useState<answerData[]>([]);
 
-  const [squares, setSquares] = useState<Square[]>(getRandomSquares());
+  const [squares, setSquares] = useState<Square[]>([]);
+  useEffect(() => {
+    randomSquare(amount, callbackSquareData, settings);
+  }, [amount, settings]);
 
   const restart = () => {
-    setSquares(getRandomSquares());
-    setTimes([]);
+    setLoading(true);
+    randomSquare(amount, callbackSquareData, settings);
     setAnswers([]);
     setCount(1);
     setCorrect(0);
     setShow(false);
     setFinish(false);
   };
+
+  function callbackSquareData(square: Square[]) {
+    setSquares(square);
+    setLoading(false);
+  }
 
   const increase = () => {
     setShow(false);
@@ -54,6 +56,10 @@ export const SquareColors: React.FC<SquareProps> = (props: SquareProps) => {
     }
   };
 
+  if (loading) {
+    return <div>LOADING</div>;
+  }
+
   if (!finish) {
     return (
       <div>
@@ -63,8 +69,10 @@ export const SquareColors: React.FC<SquareProps> = (props: SquareProps) => {
             amount={amount}
             square={squares[count - 1]}
             answerCallback={(answer, time) => {
-              setTimes((timeArray) => [...timeArray, time]);
-              setAnswers((answerArray) => [...answerArray, answer]);
+              setAnswers([
+                ...answers,
+                { square: squares[count - 1], answer, time },
+              ]);
               if (answer) {
                 setCorrect(correct + 1);
               }
@@ -74,7 +82,7 @@ export const SquareColors: React.FC<SquareProps> = (props: SquareProps) => {
         ) : (
           <AnswerScreen
             square={squares[count - 1]}
-            answer={answers[count - 1]}
+            answer={answers[count - 1].answer}
             nextCallback={() => {
               increase();
               setShow(false);
@@ -85,12 +93,10 @@ export const SquareColors: React.FC<SquareProps> = (props: SquareProps) => {
     );
   }
   return (
-    <FinishScreen
-      amount={amount}
-      squares={squares}
-      times={times}
-      answers={answers}
-      restartCallback={restart}
-    />
+    <FinishScreen amount={amount} answers={answers} restartCallback={restart} />
   );
+};
+
+SquareColors.defaultProps = {
+  settings: undefined,
 };
