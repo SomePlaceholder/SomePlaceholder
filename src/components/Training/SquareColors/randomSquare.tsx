@@ -101,7 +101,10 @@ async function getFromData(
   randomSquares[0] = getFromDataSingle(squaresOverTime, squaresWrong);
   for (let i = 1; i < amount; i += 1) {
     let randomSq = getFromDataSingle(squaresOverTime, squaresWrong);
-    while (randomSq === randomSquares[i - 1]) {
+    while (
+      randomSq.x === randomSquares[i - 1].x &&
+      randomSq.y === randomSquares[i - 1].y
+    ) {
       randomSq = getFromDataSingle(squaresOverTime, squaresWrong);
     }
     randomSquares[i] = randomSq;
