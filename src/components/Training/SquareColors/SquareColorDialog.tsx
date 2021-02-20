@@ -31,11 +31,11 @@ export class SquareColorDialog extends React.Component<DialogProps> {
 
     this.currTimer = 0;
     this.time = 0;
-    this.timerStart();
   }
 
   componentDidMount() {
     document.addEventListener('keydown', this.handleKeyPress, false);
+    this.timerStart();
   }
 
   componentWillUnmount() {

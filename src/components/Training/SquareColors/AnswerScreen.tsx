@@ -5,6 +5,8 @@ import styles from './SquareColors.module.css';
 import type { Square } from '../../../Chess';
 import { convertToAlgebra, whiteColorSquare } from '../../../Chess';
 
+import type { AddSquareInfo } from './randomSquare';
+
 const wK = 'wK';
 const bK = 'bK';
 const pieceTheme = './chesspieces/{piece}.png';
@@ -22,6 +24,11 @@ interface AnswerScreenProps {
   answer: boolean;
   square: Square;
   nextCallback: () => void;
+  addInfo: {
+    info: AddSquareInfo;
+    general: AddSquareInfo;
+    weights?: { time: number; mistake: number };
+  };
 }
 
 export class AnswerScreen extends React.Component<AnswerScreenProps> {
@@ -46,7 +53,7 @@ export class AnswerScreen extends React.Component<AnswerScreenProps> {
   };
 
   render() {
-    const { answer, square, nextCallback } = this.props;
+    const { answer, square, nextCallback, addInfo } = this.props;
     const config = getConfig(square);
     return (
       <div className={styles.ChessboardShow}>
@@ -72,6 +79,57 @@ export class AnswerScreen extends React.Component<AnswerScreenProps> {
         >
           Next
         </Button>
+        {addInfo ? (
+          <>
+            <div className={styles.AddInfo}>
+              <div>Chance: {Math.floor(addInfo.info.chance * 1000) / 10}%</div>{' '}
+              From OverTime: {addInfo.info.timeSquares} Wrong:{' '}
+              {addInfo.info.wrongSquares}
+              <div>
+                Total OverTime: {addInfo.general.timeSquares} Total wrong:{' '}
+                {addInfo.general.wrongSquares}
+              </div>
+              <div>
+                Chance of Other:{' '}
+                {Math.floor(addInfo.general.chance * 1000) / 10}%
+                {addInfo.weights ? (
+                  <>
+                    <div>
+                      Chance of OverTime:{' '}
+                      {addInfo.general.timeSquares === 0
+                        ? 0
+                        : Math.floor(
+                            ((addInfo.general.timeSquares *
+                              addInfo.weights.time) /
+                              (addInfo.general.timeSquares *
+                                addInfo.weights.time +
+                                addInfo.general.wrongSquares *
+                                  addInfo.weights.mistake)) *
+                              1000,
+                          ) / 10}{' '}
+                      %
+                    </div>
+                    <div>
+                      Chance of Mistake:{' '}
+                      {addInfo.general.wrongSquares === 0
+                        ? 0
+                        : Math.floor(
+                            ((addInfo.general.wrongSquares *
+                              addInfo.weights.mistake) /
+                              (addInfo.general.timeSquares *
+                                addInfo.weights.time +
+                                addInfo.general.wrongSquares *
+                                  addInfo.weights.mistake)) *
+                              1000,
+                          ) / 10}{' '}
+                      %
+                    </div>
+                  </>
+                ) : null}
+              </div>
+            </div>
+          </>
+        ) : null}
       </div>
     );
   }

@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { randomSquare, randomSquareSettings } from './randomSquare';
+import {
+  randomSquare,
+  randomSquareSettings,
+  defaultFromDataSettings,
+} from './randomSquare';
+import { convertToAlgebra } from '../../../Chess';
 import type { Square } from '../../../Chess';
 import { Header } from './Header';
 import { FinishScreen } from './FinishScreen';
 import { AnswerScreen } from './AnswerScreen';
 import { SquareColorDialog } from './SquareColorDialog';
+
+import type { AddInfo } from './randomSquare';
 
 interface SquareProps {
   amount: number;
@@ -28,6 +35,8 @@ export const SquareColors: React.FC<SquareProps> = (props: SquareProps) => {
   const [answers, setAnswers] = useState<answerData[]>([]);
 
   const [squares, setSquares] = useState<Square[]>([]);
+  const [addInfo, setAddInfo] = useState<AddInfo>({});
+
   useEffect(() => {
     randomSquare(amount, callbackSquareData, settings);
   }, [amount, settings]);
@@ -42,8 +51,9 @@ export const SquareColors: React.FC<SquareProps> = (props: SquareProps) => {
     setFinish(false);
   };
 
-  function callbackSquareData(square: Square[]) {
+  function callbackSquareData(square: Square[], addData: AddInfo) {
     setSquares(square);
+    setAddInfo(addData);
     setLoading(false);
   }
 
@@ -61,6 +71,16 @@ export const SquareColors: React.FC<SquareProps> = (props: SquareProps) => {
   }
 
   if (!finish) {
+    const weights = settings
+      ? {
+          time: settings.settings.timeWeight
+            ? settings.settings.timeWeight
+            : defaultFromDataSettings.timeWeight,
+          mistake: settings.settings.mistakesWeight
+            ? settings.settings.mistakesWeight
+            : defaultFromDataSettings.mistakesWeight,
+        }
+      : undefined;
     return (
       <div>
         <Header amount={amount} count={count} show={show} correct={correct} />
@@ -83,6 +103,11 @@ export const SquareColors: React.FC<SquareProps> = (props: SquareProps) => {
           <AnswerScreen
             square={squares[count - 1]}
             answer={answers[count - 1].answer}
+            addInfo={{
+              info: addInfo[convertToAlgebra(squares[count - 1])],
+              general: addInfo.general,
+              weights,
+            }}
             nextCallback={() => {
               increase();
               setShow(false);
